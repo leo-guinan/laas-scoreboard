@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -63,7 +63,7 @@ def as_money_cents(value: object) -> int:
         return 0
 
 
-def fetch_fathom(window: tuple[str, str]) -> tuple[dict, dict, dict]:
+def fetch_fathom(window: tuple[str, str]) -> tuple[dict, dict, dict, dict]:
     start, end = window
     base = {
         "entity": "pageview",
@@ -100,10 +100,41 @@ def fetch_fathom(window: tuple[str, str]) -> tuple[dict, dict, dict]:
         bucket = sources.setdefault(source, {"traffic": 0, "paid": 0, "revenue": 0})
         bucket["traffic"] += as_int(row.get("visits", row.get("pageviews")))
 
-    return {"traffic": as_int(total.get("visits", total.get("pageviews"))), "ctaClicks": 0, "bookings": 0, "paidConversions": 0, "revenue": 0}, variants, sources
+    hourly = {}
+    try:
+        cursor = datetime.fromisoformat(start).date()
+        finish = datetime.fromisoformat(end).date()
+        while cursor <= finish:
+            chunk_finish = min(cursor + timedelta(days=6), finish)
+            hourly_rows = fathom_aggregate({
+                **base,
+                "date_from": cursor.isoformat(),
+                "date_to": chunk_finish.isoformat(),
+                "aggregates": "visits",
+                "date_grouping": "hour",
+                "field_grouping": "hostname",
+                "limit": "1000",
+            })
+            for row in hourly_rows:
+                raw_time = row.get("date") or row.get("datetime") or row.get("timestamp")
+                hostname = row.get("hostname", "").lower()
+                if not raw_time:
+                    continue
+                try:
+                    hour = datetime.fromisoformat(str(raw_time).replace("Z", "+00:00")).astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0).isoformat()
+                except ValueError:
+                    continue
+                for variant, expected_host in VARIANTS.items():
+                    if hostname == expected_host:
+                        hourly.setdefault(hour, {})[variant] = as_int(row.get("visits"))
+            cursor = chunk_finish + timedelta(days=1)
+    except Exception as exc:
+        print(f"hourly Fathom attribution unavailable: {exc}", file=sys.stderr)
+
+    return {"traffic": as_int(total.get("visits", total.get("pageviews"))), "ctaClicks": 0, "bookings": 0, "paidConversions": 0, "revenue": 0}, variants, sources, hourly
 
 
-def stripe_payments(window: tuple[str, str]) -> tuple[dict, dict]:
+def stripe_payments(window: tuple[str, str]) -> tuple[dict, dict, list[dict]]:
     start = int(datetime.fromisoformat(window[0]).replace(tzinfo=timezone.utc).timestamp())
     headers = {"Authorization": f"Bearer {os.environ['STRIPE_SECRET_KEY'].strip()}"}
     payments: list[dict] = []
@@ -124,6 +155,7 @@ def stripe_payments(window: tuple[str, str]) -> tuple[dict, dict]:
 
     totals = {"traffic": 0, "ctaClicks": 0, "bookings": 0, "paidConversions": 0, "revenue": 0}
     variants = {key: {"traffic": 0, "ctaClicks": 0, "bookings": 0, "paidConversions": 0, "revenue": 0} for key in VARIANTS}
+    eligible = []
     for payment in payments:
         if payment.get("status") != "succeeded" or not as_money_cents(payment.get("amount_received")):
             continue
@@ -134,10 +166,43 @@ def stripe_payments(window: tuple[str, str]) -> tuple[dict, dict]:
         amount = as_money_cents(payment.get("amount_received")) // 100
         totals["paidConversions"] += 1
         totals["revenue"] += amount
+        eligible.append(payment)
         if variant in variants:
             variants[variant]["paidConversions"] += 1
             variants[variant]["revenue"] += amount
-    return totals, variants
+    return totals, variants, eligible
+
+
+def fuzzy_attribute(payments: list[dict], hourly: dict, variants: dict) -> dict:
+    """Assign untagged payments only when one variant owns the nearby traffic bucket."""
+    summary = {"exact": 0, "fuzzy": 0, "ambiguous": 0, "unattributed": 0}
+    for payment in payments:
+        metadata = payment.get("metadata") or {}
+        if metadata.get("landing_variant") in variants:
+            summary["exact"] += 1
+            continue
+        created = payment.get("created")
+        if not created:
+            summary["unattributed"] += 1
+            continue
+        payment_hour = datetime.fromtimestamp(int(created), tz=timezone.utc).replace(minute=0, second=0, microsecond=0)
+        scores = {variant: 0 for variant in VARIANTS}
+        for offset in (0, -1):
+            bucket = hourly.get((payment_hour + timedelta(hours=offset)).isoformat(), {})
+            for variant in VARIANTS:
+                scores[variant] += int(bucket.get(variant, 0))
+        ordered = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+        if ordered[0][1] > 0 and ordered[0][1] > ordered[1][1]:
+            variant = ordered[0][0]
+            amount = as_money_cents(payment.get("amount_received")) // 100
+            variants[variant]["paidConversions"] += 1
+            variants[variant]["revenue"] += amount
+            summary["fuzzy"] += 1
+        elif sum(scores.values()) > 0:
+            summary["ambiguous"] += 1
+        else:
+            summary["unattributed"] += 1
+    return summary
 
 
 def main() -> int:
@@ -151,8 +216,9 @@ def main() -> int:
         print("Experiment not started; scoreboard left unmeasured.")
         return 0
 
-    fathom_totals, fathom_variants, sources = fetch_fathom(window)
-    stripe_totals, stripe_variants = stripe_payments(window)
+    fathom_totals, fathom_variants, sources, hourly = fetch_fathom(window)
+    stripe_totals, stripe_variants, payments = stripe_payments(window)
+    attribution = fuzzy_attribute(payments, hourly, stripe_variants)
     totals = fathom_totals | {"paidConversions": stripe_totals["paidConversions"], "revenue": stripe_totals["revenue"]}
     variants = {}
     for key in VARIANTS:
@@ -160,9 +226,9 @@ def main() -> int:
             "paidConversions": stripe_variants[key]["paidConversions"],
             "revenue": stripe_variants[key]["revenue"],
         }
-    data["metrics"] = {"totals": totals, "variants": variants, "sources": sources}
+    data["metrics"] = {"totals": totals, "variants": variants, "sources": sources, "attribution": attribution}
     data["updatedAt"] = datetime.now(timezone.utc).isoformat()
-    data["source"] = "Fathom pageview aggregates + Stripe succeeded PaymentIntents"
+    data["source"] = "Fathom pageview/hourly aggregates + Stripe succeeded PaymentIntents"
     path.write_text(json.dumps(data, indent=2) + "\n")
     print(json.dumps({"window": window, "totals": totals, "variants": variants}, indent=2))
     return 0

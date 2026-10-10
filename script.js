@@ -50,6 +50,8 @@ function render(data) {
   document.querySelector("#experiment-window").textContent = `${experiment.durationDays || 14}-day window`;
   document.querySelector("#last-updated").textContent = `Data updated ${data.updatedAt || "—"}`;
   document.querySelector("#data-source-note").textContent = `Source: ${data.source || "scoreboard data"}`;
+  const attribution = metrics.attribution || {};
+  document.querySelector("#attribution-note").textContent = `Attribution evidence: ${attribution.exact || 0} exact · ${attribution.fuzzy || 0} fuzzy bucket · ${attribution.ambiguous || 0} ambiguous · ${attribution.unattributed || 0} unattributed`;
 
   document.querySelector("#total-traffic").textContent = number.format(totals.traffic);
   document.querySelector("#total-cta").textContent = number.format(totals.cta);

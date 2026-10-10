@@ -45,6 +45,8 @@ The initial data file intentionally says `UNMEASURED` and `NOT_STARTED`. It cont
 
 `.github/workflows/update.yml` runs every 15 minutes and can also be started manually. It calls the Fathom aggregation API for the shared site `XERIAWTA`, reads succeeded Stripe PaymentIntents, joins payments using `experiment=laas_three_way_v1` and `landing_variant`, and commits the resulting aggregate metrics back to `data/scoreboard.json`.
 
+For payments without explicit variant metadata, the updater compares the payment's Stripe creation hour and preceding hour against Fathom hourly hostname buckets. It assigns a fuzzy match only when one variant has strictly more nearby traffic than the others. Ties and empty buckets stay `ambiguous` or `unattributed` and remain visible on the dashboard.
+
 The repository secrets are:
 
 - `FATHOM_API_KEY` — the protected Fathom key file value; pipe-delimited values are parsed safely.
