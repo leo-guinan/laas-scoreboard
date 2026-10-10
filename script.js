@@ -21,25 +21,27 @@ function fmtRate(numerator, denominator) {
 function render(data) {
   const experiment = data.experiment || {};
   const leaves = Array.isArray(data.leafNodes) ? data.leafNodes : [];
+  const metrics = data.metrics || {};
+  const metricVariants = metrics.variants || {};
   const variantRows = Object.keys(VARIANTS).map((id) => {
     const rows = leaves.filter((row) => row.variant === id);
     return {
       id,
       ...VARIANTS[id],
-      traffic: sum(rows, "traffic"),
-      cta: sum(rows, "ctaClicks"),
-      bookings: sum(rows, "bookings"),
-      paid: sum(rows, "paidConversions"),
-      revenue: sum(rows, "revenue")
+      traffic: Number(metricVariants[id]?.traffic ?? sum(rows, "traffic")),
+      cta: Number(metricVariants[id]?.ctaClicks ?? sum(rows, "ctaClicks")),
+      bookings: Number(metricVariants[id]?.bookings ?? sum(rows, "bookings")),
+      paid: Number(metricVariants[id]?.paidConversions ?? sum(rows, "paidConversions")),
+      revenue: Number(metricVariants[id]?.revenue ?? sum(rows, "revenue"))
     };
   });
 
   const totals = {
-    traffic: sum(variantRows, "traffic"),
-    cta: sum(variantRows, "cta"),
-    bookings: sum(variantRows, "bookings"),
-    paid: sum(variantRows, "paid"),
-    revenue: sum(variantRows, "revenue")
+    traffic: Number(metrics.totals?.traffic ?? sum(variantRows, "traffic")),
+    cta: Number(metrics.totals?.ctaClicks ?? sum(variantRows, "cta")),
+    bookings: Number(metrics.totals?.bookings ?? sum(variantRows, "bookings")),
+    paid: Number(metrics.totals?.paidConversions ?? sum(variantRows, "paid")),
+    revenue: Number(metrics.totals?.revenue ?? sum(variantRows, "revenue"))
   };
 
   document.title = `${experiment.name || "LAAS Experiment"} — Scoreboard`;
@@ -87,7 +89,7 @@ function render(data) {
       <td class="${row.paid ? "good" : ""}">${fmtRate(row.paid, row.traffic)}</td>
     </tr>`).join("");
 
-  const sourceTotals = SOURCES.map((source) => {
+  const sourceTotals = metrics.sources ? Object.entries(metrics.sources).map(([source, values]) => ({ source, ...values })) : SOURCES.map((source) => {
     const rows = leaves.filter((row) => (row.source || "Other") === source);
     return { source, traffic: sum(rows, "traffic"), paid: sum(rows, "paidConversions"), revenue: sum(rows, "revenue") };
   }).filter((row) => row.traffic || row.paid || row.revenue);
