@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Live scoreboard for the Leo as a Service three-way landing-page experiment." />
+  <title>LAAS Experiment Scoreboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Leo as a Service</p>
+      <h1>Three pages. One scoreboard.</h1>
+    </div>
+    <div class="status" id="experiment-status">Loading experiment…</div>
+  </header>
+
+  <main>
+    <section class="hero-grid">
+      <div class="panel intro-panel">
+        <p class="eyebrow">Experiment</p>
+        <h2 id="experiment-name">Loading…</h2>
+        <p id="experiment-copy">Traffic from the network enters one of three termination points. The scoreboard follows it to money.</p>
+        <div class="meta-row">
+          <span id="experiment-window">14-day window</span>
+          <span id="last-updated">Data updated —</span>
+        </div>
+      </div>
+      <div class="panel gauge-panel">
+        <div class="gauge-heading">
+          <span>Revenue range</span>
+          <strong id="revenue-gauge-label">$0 / $10K minimum</strong>
+        </div>
+        <div class="gauge" aria-label="Revenue progress from minimum to maximum outcome">
+          <div class="gauge-fill" id="revenue-gauge-fill"></div>
+          <span class="gauge-min">$10K</span>
+          <span class="gauge-max">$100K cap</span>
+        </div>
+        <div class="countdown" id="countdown">Experiment not started</div>
+        <p class="muted">Minimum acceptable outcome: $10,000. Hard experiment cap: $100,000.</p>
+      </div>
+    </section>
+
+    <section class="metric-grid" aria-label="Overall funnel">
+      <article class="metric-card"><span>Traffic</span><strong id="total-traffic">0</strong><small>qualified visits</small></article>
+      <article class="metric-card"><span>CTA actions</span><strong id="total-cta">0</strong><small>calibration clicks</small></article>
+      <article class="metric-card"><span>Bookings</span><strong id="total-bookings">0</strong><small>booking starts</small></article>
+      <article class="metric-card"><span>Paid conversions</span><strong id="total-conversions">0</strong><small>settled calibrations</small></article>
+      <article class="metric-card revenue-card"><span>Revenue</span><strong id="total-revenue">$0</strong><small>settled revenue</small></article>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading"><div><p class="eyebrow">Termination points</p><h2>Which page converts?</h2></div><p class="muted">Same booking link. Different argument.</p></div>
+      <div class="table-wrap"><table><thead><tr><th>Variant</th><th>Traffic</th><th>CTA</th><th>Bookings</th><th>Paid</th><th>Revenue</th><th>Paid / visit</th></tr></thead><tbody id="variant-rows"></tbody></table></div>
+    </section>
+
+    <section class="two-column section-block">
+      <div>
+        <div class="section-heading"><div><p class="eyebrow">Network inputs</p><h2>Where traffic comes from</h2></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Source</th><th>Traffic</th><th>Paid</th><th>Revenue</th></tr></thead><tbody id="source-rows"></tbody></table></div>
+      </div>
+      <div>
+        <div class="section-heading"><div><p class="eyebrow">Leaf nodes</p><h2>Content that points in</h2></div></div>
+        <div class="leaf-list" id="leaf-list"></div>
+      </div>
+    </section>
+
+    <section class="notes panel">
+      <p class="eyebrow">Measurement boundary</p>
+      <p>Traffic and CTA counts come from Fathom. Paid conversions and revenue must be reconciled from booking/payment records. Missing data stays missing; it is not silently converted to zero.</p>
+      <p class="muted" id="data-source-note">Loading data source…</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

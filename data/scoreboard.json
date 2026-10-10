@@ -1,0 +1,14 @@
+{
+  "experiment": {
+    "id": "laas_three_way_v1",
+    "name": "Essay vs conversation vs focused sales page",
+    "description": "Fourteen videos and the social posts around them move traffic into three landing-page termination points. This scoreboard follows the path to settled revenue.",
+    "startAt": "",
+    "durationDays": 14,
+    "minimumRevenue": 10000,
+    "maximumRevenue": 100000
+  },
+  "updatedAt": "NOT_STARTED",
+  "source": "UNMEASURED — replace with reconciled Fathom and payment exports",
+  "leafNodes": []
+}
