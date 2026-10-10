@@ -3,12 +3,57 @@
     "id": "laas_three_way_v1",
     "name": "Essay vs conversation vs focused sales page",
     "description": "Fourteen videos and the social posts around them move traffic into three landing-page termination points. This scoreboard follows the path to settled revenue.",
-    "startAt": "",
+    "startAt": "2026-10-10T17:47:14Z",
     "durationDays": 14,
     "minimumRevenue": 10000,
     "maximumRevenue": 100000
   },
-  "updatedAt": "NOT_STARTED",
-  "source": "UNMEASURED \u2014 experiment.startAt is empty",
-  "leafNodes": []
+  "updatedAt": "2026-10-10T19:44:42.419163+00:00",
+  "source": "Fathom pageview/hourly aggregates + Stripe succeeded PaymentIntents",
+  "leafNodes": [],
+  "metrics": {
+    "totals": {
+      "traffic": 6,
+      "ctaClicks": 0,
+      "bookings": 0,
+      "paidConversions": 0,
+      "revenue": 0
+    },
+    "variants": {
+      "essay": {
+        "traffic": 0,
+        "ctaClicks": 0,
+        "bookings": 0,
+        "paidConversions": 0,
+        "revenue": 0
+      },
+      "jay": {
+        "traffic": 0,
+        "ctaClicks": 0,
+        "bookings": 0,
+        "paidConversions": 0,
+        "revenue": 0
+      },
+      "sales": {
+        "traffic": 0,
+        "ctaClicks": 0,
+        "bookings": 0,
+        "paidConversions": 0,
+        "revenue": 0
+      }
+    },
+    "sources": {
+      "YouTube": {
+        "traffic": 3,
+        "paid": 0,
+        "revenue": 0
+      }
+    },
+    "attribution": {
+      "exact": 0,
+      "fuzzy": 0,
+      "ambiguous": 0,
+      "unattributed": 0
+    }
+  }
 }

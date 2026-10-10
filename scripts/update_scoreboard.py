@@ -30,12 +30,12 @@ def fathom_token() -> str:
     return raw.split("|", 1)[1] if "|" in raw else raw
 
 
-def date_window(start_at: str) -> tuple[str, str] | None:
+def date_window(start_at: str) -> tuple[str, str, datetime] | None:
     if not start_at:
         return None
     start = datetime.fromisoformat(start_at.replace("Z", "+00:00"))
     today = datetime.now(timezone.utc).date()
-    return start.date().isoformat(), today.isoformat()
+    return start.date().isoformat(), today.isoformat(), start
 
 
 def fathom_aggregate(params: dict[str, str]) -> list[dict]:
@@ -63,8 +63,8 @@ def as_money_cents(value: object) -> int:
         return 0
 
 
-def fetch_fathom(window: tuple[str, str]) -> tuple[dict, dict, dict, dict]:
-    start, end = window
+def fetch_fathom(window: tuple[str, str, datetime]) -> tuple[dict, dict, dict, dict]:
+    start, end, _ = window
     base = {
         "entity": "pageview",
         "entity_id": FATHOM_SITE_ID,
@@ -134,8 +134,8 @@ def fetch_fathom(window: tuple[str, str]) -> tuple[dict, dict, dict, dict]:
     return {"traffic": as_int(total.get("visits", total.get("pageviews"))), "ctaClicks": 0, "bookings": 0, "paidConversions": 0, "revenue": 0}, variants, sources, hourly
 
 
-def stripe_payments(window: tuple[str, str]) -> tuple[dict, dict, list[dict]]:
-    start = int(datetime.fromisoformat(window[0]).replace(tzinfo=timezone.utc).timestamp())
+def stripe_payments(window: tuple[str, str, datetime]) -> tuple[dict, dict, list[dict]]:
+    start = int(window[2].timestamp())
     headers = {"Authorization": f"Bearer {os.environ['STRIPE_SECRET_KEY'].strip()}"}
     payments: list[dict] = []
     starting_after = None
@@ -230,7 +230,7 @@ def main() -> int:
     data["updatedAt"] = datetime.now(timezone.utc).isoformat()
     data["source"] = "Fathom pageview/hourly aggregates + Stripe succeeded PaymentIntents"
     path.write_text(json.dumps(data, indent=2) + "\n")
-    print(json.dumps({"window": window, "totals": totals, "variants": variants}, indent=2))
+    print(json.dumps({"window": window[:2], "startAt": window[2].isoformat(), "totals": totals, "variants": variants}, indent=2))
     return 0
 
 
