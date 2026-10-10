@@ -9,6 +9,6 @@
     "maximumRevenue": 100000
   },
   "updatedAt": "NOT_STARTED",
-  "source": "UNMEASURED — replace with reconciled Fathom and payment exports",
+  "source": "UNMEASURED \u2014 experiment.startAt is empty",
   "leafNodes": []
 }
