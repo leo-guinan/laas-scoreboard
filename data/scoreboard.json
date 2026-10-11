@@ -8,7 +8,7 @@
     "minimumRevenue": 10000,
     "maximumRevenue": 100000
   },
-  "updatedAt": "2026-10-11T19:31:25.837432+00:00",
+  "updatedAt": "2026-10-11T22:44:03.315412+00:00",
   "source": "Fathom pageview/hourly aggregates + Stripe succeeded PaymentIntents",
   "leafNodes": [],
   "metrics": {
@@ -21,28 +21,28 @@
     },
     "variants": {
       "essay": {
-        "traffic": 0,
+        "traffic": 3,
         "ctaClicks": 0,
         "bookings": 0,
         "paidConversions": 0,
         "revenue": 0
       },
       "jay": {
-        "traffic": 0,
+        "traffic": 7,
         "ctaClicks": 0,
         "bookings": 0,
         "paidConversions": 0,
         "revenue": 0
       },
       "sales": {
-        "traffic": 0,
+        "traffic": 2,
         "ctaClicks": 0,
         "bookings": 0,
         "paidConversions": 0,
         "revenue": 0
       },
       "quai": {
-        "traffic": 0,
+        "traffic": 1,
         "ctaClicks": 0,
         "bookings": 0,
         "paidConversions": 0,
@@ -61,6 +61,7 @@
       "fuzzy": 0,
       "ambiguous": 0,
       "unattributed": 0
-    }
+    },
+    "unallocated": {}
   }
 }
