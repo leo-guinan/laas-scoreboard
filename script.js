@@ -52,7 +52,10 @@ function render(data) {
   document.querySelector("#last-updated").textContent = `Data updated ${data.updatedAt || "—"}`;
   document.querySelector("#data-source-note").textContent = `Source: ${data.source || "scoreboard data"}`;
   const attribution = metrics.attribution || {};
-  document.querySelector("#attribution-note").textContent = `Attribution evidence: ${attribution.exact || 0} exact · ${attribution.fuzzy || 0} fuzzy bucket · ${attribution.ambiguous || 0} ambiguous · ${attribution.unattributed || 0} unattributed`;
+  const unallocated = metrics.unallocated || {};
+  const unallocatedTotal = Object.values(unallocated).reduce((total, value) => total + (Number(value) || 0), 0);
+  const unallocatedHosts = Object.entries(unallocated).map(([host, traffic]) => `${host}: ${number.format(Number(traffic) || 0)}`).join(" · ");
+  document.querySelector("#attribution-note").textContent = `Attribution evidence: ${attribution.exact || 0} exact · ${attribution.fuzzy || 0} fuzzy bucket · ${attribution.ambiguous || 0} ambiguous · ${attribution.unattributed || 0} unattributed · ${number.format(unallocatedTotal)} unmatched hostname traffic${unallocatedHosts ? ` (${unallocatedHosts})` : ""}`;
 
   document.querySelector("#total-traffic").textContent = number.format(totals.traffic);
   document.querySelector("#total-cta").textContent = number.format(totals.cta);

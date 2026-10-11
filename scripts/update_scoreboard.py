@@ -7,7 +7,7 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 FATHOM_SITE_ID = "XERIAWTA"
@@ -64,7 +64,16 @@ def as_money_cents(value: object) -> int:
         return 0
 
 
-def fetch_fathom(window: tuple[str, str, datetime]) -> tuple[dict, dict, dict, dict]:
+def normalise_hostname(value: object) -> str:
+    """Normalize Fathom hostname dimensions before variant matching."""
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    parsed = urlsplit(raw if "://" in raw else f"//{raw}")
+    return (parsed.hostname or "").rstrip(".")
+
+
+def fetch_fathom(window: tuple[str, str, datetime]) -> tuple[dict, dict, dict, dict, dict]:
     start, end, _ = window
     base = {
         "entity": "pageview",
@@ -82,11 +91,18 @@ def fetch_fathom(window: tuple[str, str, datetime]) -> tuple[dict, dict, dict, d
         "limit": "100",
     })
     variants = {key: {"traffic": 0, "ctaClicks": 0, "bookings": 0, "paidConversions": 0, "revenue": 0} for key in VARIANTS}
+    unallocated = {}
     for row in variant_rows:
-        hostname = row.get("hostname", "").lower()
+        hostname = normalise_hostname(row.get("hostname", ""))
+        matched = False
         for variant, expected_host in VARIANTS.items():
-            if hostname == expected_host:
+            if hostname == normalise_hostname(expected_host):
                 variants[variant]["traffic"] = as_int(row.get("visits", row.get("pageviews")))
+                matched = True
+                break
+        if not matched:
+            key = hostname or "(blank hostname)"
+            unallocated[key] = unallocated.get(key, 0) + as_int(row.get("visits", row.get("pageviews")))
 
     source_rows = fathom_aggregate({
         **base,
@@ -118,7 +134,7 @@ def fetch_fathom(window: tuple[str, str, datetime]) -> tuple[dict, dict, dict, d
             })
             for row in hourly_rows:
                 raw_time = row.get("date") or row.get("datetime") or row.get("timestamp")
-                hostname = row.get("hostname", "").lower()
+                hostname = normalise_hostname(row.get("hostname", ""))
                 if not raw_time:
                     continue
                 try:
@@ -132,7 +148,7 @@ def fetch_fathom(window: tuple[str, str, datetime]) -> tuple[dict, dict, dict, d
     except Exception as exc:
         print(f"hourly Fathom attribution unavailable: {exc}", file=sys.stderr)
 
-    return {"traffic": as_int(total.get("visits", total.get("pageviews"))), "ctaClicks": 0, "bookings": 0, "paidConversions": 0, "revenue": 0}, variants, sources, hourly
+    return {"traffic": as_int(total.get("visits", total.get("pageviews"))), "ctaClicks": 0, "bookings": 0, "paidConversions": 0, "revenue": 0}, variants, sources, hourly, unallocated
 
 
 def stripe_payments(window: tuple[str, str, datetime]) -> tuple[dict, dict, list[dict]]:
@@ -217,7 +233,7 @@ def main() -> int:
         print("Experiment not started; scoreboard left unmeasured.")
         return 0
 
-    fathom_totals, fathom_variants, sources, hourly = fetch_fathom(window)
+    fathom_totals, fathom_variants, sources, hourly, unallocated = fetch_fathom(window)
     stripe_totals, stripe_variants, payments = stripe_payments(window)
     attribution = fuzzy_attribute(payments, hourly, stripe_variants)
     totals = fathom_totals | {"paidConversions": stripe_totals["paidConversions"], "revenue": stripe_totals["revenue"]}
@@ -227,7 +243,7 @@ def main() -> int:
             "paidConversions": stripe_variants[key]["paidConversions"],
             "revenue": stripe_variants[key]["revenue"],
         }
-    data["metrics"] = {"totals": totals, "variants": variants, "sources": sources, "attribution": attribution}
+    data["metrics"] = {"totals": totals, "variants": variants, "sources": sources, "attribution": attribution, "unallocated": unallocated}
     data["updatedAt"] = datetime.now(timezone.utc).isoformat()
     data["source"] = "Fathom pageview/hourly aggregates + Stripe succeeded PaymentIntents"
     path.write_text(json.dumps(data, indent=2) + "\n")
