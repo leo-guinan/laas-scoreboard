@@ -4,7 +4,8 @@ const number = new Intl.NumberFormat("en-US");
 const VARIANTS = {
   essay: { label: "Essay", host: "essay.leoasaservice.com" },
   jay: { label: "Jay / conversation", host: "jay.leoasaservice.com" },
-  sales: { label: "Focused sales page", host: "www.leoasaservice.com" }
+  sales: { label: "Focused sales page", host: "www.leoasaservice.com" },
+  quai: { label: "Quai trust path", host: "quai.leoasaservice.com" }
 };
 
 const SOURCES = ["YouTube", "LinkedIn", "X", "Direct", "Other"];

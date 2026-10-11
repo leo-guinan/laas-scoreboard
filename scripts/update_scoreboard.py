@@ -15,6 +15,7 @@ VARIANTS = {
     "essay": "essay.leoasaservice.com",
     "jay": "jay.leoasaservice.com",
     "sales": "www.leoasaservice.com",
+    "quai": "quai.leoasaservice.com",
 }
 SOURCES = ("YouTube", "LinkedIn", "X", "Direct", "Other")
 
@@ -160,7 +161,7 @@ def stripe_payments(window: tuple[str, str, datetime]) -> tuple[dict, dict, list
         if payment.get("status") != "succeeded" or not as_money_cents(payment.get("amount_received")):
             continue
         metadata = payment.get("metadata") or {}
-        if metadata.get("experiment") not in (None, "", "laas_three_way_v1"):
+        if metadata.get("experiment") not in (None, "", "laas_three_way_v1", "laas_four_way_v1"):
             continue
         variant = metadata.get("landing_variant")
         amount = as_money_cents(payment.get("amount_received")) // 100

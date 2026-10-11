@@ -1,8 +1,8 @@
 {
   "experiment": {
-    "id": "laas_three_way_v1",
-    "name": "Essay vs conversation vs focused sales page",
-    "description": "Fourteen videos and the social posts around them move traffic into three landing-page termination points. This scoreboard follows the path to settled revenue.",
+    "id": "laas_four_way_v1",
+    "name": "Essay vs conversation vs focused sales page vs Quai trust path",
+    "description": "Fourteen videos and the social posts around them move traffic into four landing-page termination points. This scoreboard follows the path to settled revenue.",
     "startAt": "2026-10-10T17:47:14Z",
     "durationDays": 14,
     "minimumRevenue": 10000,
@@ -35,6 +35,13 @@
         "revenue": 0
       },
       "sales": {
+        "traffic": 0,
+        "ctaClicks": 0,
+        "bookings": 0,
+        "paidConversions": 0,
+        "revenue": 0
+      },
+      "quai": {
         "traffic": 0,
         "ctaClicks": 0,
         "bookings": 0,
