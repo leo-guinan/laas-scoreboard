@@ -97,7 +97,7 @@ def fetch_fathom(window: tuple[str, str, datetime]) -> tuple[dict, dict, dict, d
         matched = False
         for variant, expected_host in VARIANTS.items():
             if hostname == normalise_hostname(expected_host):
-                variants[variant]["traffic"] = as_int(row.get("visits", row.get("pageviews")))
+                variants[variant]["traffic"] += as_int(row.get("visits", row.get("pageviews")))
                 matched = True
                 break
         if not matched:
@@ -138,12 +138,16 @@ def fetch_fathom(window: tuple[str, str, datetime]) -> tuple[dict, dict, dict, d
                 if not raw_time:
                     continue
                 try:
-                    hour = datetime.fromisoformat(str(raw_time).replace("Z", "+00:00")).astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0).isoformat()
+                    parsed_time = datetime.fromisoformat(str(raw_time).replace("Z", "+00:00"))
+                    if parsed_time.tzinfo is None:
+                        parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+                    hour = parsed_time.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0).isoformat()
                 except ValueError:
                     continue
                 for variant, expected_host in VARIANTS.items():
                     if hostname == expected_host:
-                        hourly.setdefault(hour, {})[variant] = as_int(row.get("visits"))
+                        bucket = hourly.setdefault(hour, {})
+                        bucket[variant] = bucket.get(variant, 0) + as_int(row.get("visits"))
             cursor = chunk_finish + timedelta(days=1)
     except Exception as exc:
         print(f"hourly Fathom attribution unavailable: {exc}", file=sys.stderr)
