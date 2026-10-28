@@ -8,7 +8,7 @@
     "minimumRevenue": 10000,
     "maximumRevenue": 100000
   },
-  "updatedAt": "2026-10-28T01:52:22.500528+00:00",
+  "updatedAt": "2026-10-28T07:38:45.397179+00:00",
   "source": "Fathom pageview/hourly aggregates + Stripe succeeded PaymentIntents",
   "leafNodes": [],
   "metrics": {
@@ -16,8 +16,8 @@
       "traffic": 46,
       "ctaClicks": 0,
       "bookings": 0,
-      "paidConversions": 0,
-      "revenue": 0
+      "paidConversions": 1,
+      "revenue": 100
     },
     "variants": {
       "essay": {
@@ -60,7 +60,7 @@
       "exact": 0,
       "fuzzy": 0,
       "ambiguous": 0,
-      "unattributed": 0
+      "unattributed": 1
     },
     "unallocated": {
       "hack.leoasaservice.com": 1
