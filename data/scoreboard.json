@@ -8,12 +8,12 @@
     "minimumRevenue": 10000,
     "maximumRevenue": 100000
   },
-  "updatedAt": "2026-11-06T16:15:09.936199+00:00",
+  "updatedAt": "2026-11-06T21:29:58.343684+00:00",
   "source": "Fathom pageview/hourly aggregates + Stripe succeeded PaymentIntents",
   "leafNodes": [],
   "metrics": {
     "totals": {
-      "traffic": 54,
+      "traffic": 56,
       "ctaClicks": 0,
       "bookings": 0,
       "paidConversions": 2,
@@ -35,7 +35,7 @@
         "revenue": 0
       },
       "sales": {
-        "traffic": 41,
+        "traffic": 43,
         "ctaClicks": 0,
         "bookings": 0,
         "paidConversions": 1,
