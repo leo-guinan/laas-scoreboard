@@ -8,7 +8,7 @@
     "minimumRevenue": 10000,
     "maximumRevenue": 100000
   },
-  "updatedAt": "2026-11-07T22:05:56.450747+00:00",
+  "updatedAt": "2026-11-08T01:23:20.378195+00:00",
   "source": "Fathom pageview/hourly aggregates + Stripe succeeded PaymentIntents",
   "leafNodes": [],
   "metrics": {
